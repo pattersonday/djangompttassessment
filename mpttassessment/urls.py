@@ -60,5 +60,5 @@ class CategoryAdmin(DraggableMPTTAdmin):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    re_path(r'^fileobject/', show_fileobject)
+    re_path('', show_fileobject)
 ]
