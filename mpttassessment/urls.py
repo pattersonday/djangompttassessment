@@ -15,11 +15,48 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path
+from mptt.admin import DraggableMPTTAdmin
 
 from mpttassessment.models import FileObject
 from mpttassessment.views import show_fileobject
 
 admin.site.register(FileObject)
+
+
+class CategoryAdmin(DraggableMPTTAdmin):
+    mptt_indent_field = 'name'
+    list_display = ('tree_actions',
+                    'indented_title',
+                    'related_products_count',
+                    'related_products_cumulative_count')
+    list_display_links = ('indented_title')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = FileObject.objects.add_related_count(
+            qs,
+            'category',
+            'products_cumulative_count',
+            cumulative=True
+        )
+
+        qs = FileObject.objects.add_related_count(
+            qs,
+            'categories',
+            'products_count',
+            cumulative=False
+        )
+        return qs
+
+    def related_products_count(self, instance):
+        return instance.products_count
+    related_products_count.short_description = 'Related files (for this specific folder)'
+
+    def related_products_cumulative_count(self, instance):
+        return instance.products_cumulative_count
+    related_products_cumulative_count.short_description = 'Related files (in tree)'
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
